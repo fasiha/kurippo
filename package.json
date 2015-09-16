@@ -16,8 +16,10 @@
   "author": "thejsj",
   "license": "MIT",
   "dependencies": {
+    "body-parser": "^1.13.3",
     "config": "^1.12.0",
     "consolidate": "^0.12.1",
+    "cors": "^2.7.1",
     "express": "^4.12.3",
     "express-session": "^1.11.1",
     "mustache": "^2.0.0",

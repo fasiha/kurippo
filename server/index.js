@@ -4,6 +4,9 @@
 var fs = require('fs');
 var http = require('http');
 var https = require('https');
+var bodyParser = require('body-parser');
+var cors = require('cors');
+
 var config = require('config');
 var express = require('express');
 var session = require('express-session');
@@ -12,8 +15,11 @@ var engines = require('consolidate');
 var app = express();
 var auth = require('./auth');
 var authRouter = require('./auth/auth-router');
+var clipRouter = require('./clipper');
 
 // Middleware
+app.use(bodyParser.json());
+app.use(cors());
 app
     .use(session(
         {secret : 'zfnzkwjehgweghw', resave : false, saveUninitialized : true}))
@@ -27,6 +33,7 @@ app.set('views', __dirname + '/views')
 
 // Routes
 app.use('/auth', authRouter)
+    .use('/clip', clipRouter)
     .get('/',
          function(req, res) { res.render('index.html', {user : req.user}); })
     .use(express.static(__dirname + '/../client'))
