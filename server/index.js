@@ -2,8 +2,9 @@
 'use strict';
 
 var fs = require('fs');
-var config = require('config');
+var http = require('http');
 var https = require('https');
+var config = require('config');
 var express = require('express');
 var session = require('express-session');
 var engines = require('consolidate');
@@ -44,4 +45,13 @@ https.createServer(
       console.log(
           `HTTPS live at https://localhost:${config.get('ports').https}`);
     });
+
+var insecureApp = express();
+insecureApp.get(
+    '*',
+    (req, res) => {res.redirect(
+        `${config.get('protocol')}://${config.get('url')}:${config.get('ports').https}`)});
+http.createServer(insecureApp)
+    .listen(config.get('ports').http,
+            () => {console.log(`HTTP live at http://localhost:${config.get('ports').http}`)});
 

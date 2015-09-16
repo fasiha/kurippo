@@ -10,7 +10,8 @@ module.exports = {
   protocol: 'https',
   url: '127.0.0.1',
   ports: {
-    https: 4001
+    https: 4001,
+    http: 3001
   },
   rethinkdb: {
     host: 'localhost',
