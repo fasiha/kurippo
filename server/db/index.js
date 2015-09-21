@@ -15,15 +15,15 @@ r.getNewConnection = function () {
     });
 };
 
-r.init(config.get('rethinkdb'), [
-  {
-    name: 'users',
-    indexes: ['login']
-  }
-]).then(function (conn) {
-  r.conn = conn;
-  r.connections.push(conn);
-  r.conn.use(config.get('rethinkdb').db);
-});
+r.init(config.get('rethinkdb'),
+       [
+         {name : 'users', indexes : [ 'login' ]},
+         {name : 'clippings', indexes : [ 'urlOrTitle' ]}
+       ])
+  .then(function(conn) {
+    r.conn = conn;
+    r.connections.push(conn);
+    r.conn.use(config.get('rethinkdb').db);
+  });
 
 module.exports = r;
