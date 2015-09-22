@@ -22,6 +22,7 @@ var clipRouter = require('./clipper');
 
 // Middleware
 app.set('x-powered-by', false);
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 // app.use(cors()); // Apply in routers
 app.use(morgan('combined'));
