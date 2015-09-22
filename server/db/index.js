@@ -18,7 +18,8 @@ r.getNewConnection = function () {
 r.init(config.get('rethinkdb'),
        [
          {name : 'users', indexes : [ 'login' ]},
-         {name : 'clippings', indexes : [ 'urlOrTitle' ]}
+         {name : 'clippings', indexes : [ 'urlOrTitle' ]},
+         {name : 'session'}
        ])
   .then(function(conn) {
     r.conn = conn;
