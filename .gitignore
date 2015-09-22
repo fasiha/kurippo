@@ -4,4 +4,5 @@ congig/*
 !config/default.js
 certs/
 rethinkdb_data/
-
+config/default.js
+*.swp
