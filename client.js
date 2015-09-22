@@ -1,4 +1,4 @@
-// GET
+// Via GET & query parameters: opens a new window.
 var o = {
   source : 'clipper',
   url : document.location.href,
@@ -12,7 +12,7 @@ window.open(url, '', 'width=400,height=400,status=1,toolbar=0,resizable=0,scroll
 void(0);
 
 
-// With credentials
+// Via XHR. Very discreet!
 (() => {
   var req = new XMLHttpRequest();
   req.onreadystatechange = (() => {

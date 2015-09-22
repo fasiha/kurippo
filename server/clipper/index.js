@@ -14,6 +14,11 @@ var corsSetup = cors({
   maxAge : 1
 });
 
+function ensureAuthenticated(req, res, next) {
+  if (req.isAuthenticated()) { return next(); }
+  return res.redirect('/?fwd=' + encodeURIComponent(req.originalUrl));
+}
+
 function objToDb(obj) {
   return r.table('clippings')
     .getAll(obj.urlOrTitle, {index : 'urlOrTitle'})
@@ -67,34 +72,5 @@ clipRouter.route('/')
 // curl -X POST https://localhost:4001/clip -d '{"hi":"THERE"}' -k -H
 // "Content-Type: application/json"
 
-/*
- * Works if you use 127.0.0.1 >.<
- */
-clipRouter.route('/auth')
-  .options(corsSetup)
-  .post(
-    (req, res, next) => {
-      console.log(req.headers);
-      next();
-    },
-    corsSetup, ensureAuthenticated,
-    (req, res) => {
-      var obj = req.body;
-      obj.date = new Date();
-      obj.urlOrTitle = obj.url || obj.title || "（ｕｎｔｉｔｌｅｄ）";
-      console.log('FROM', req.authcode, req.user, req.headers, 'SENT', obj);
-      res.json({resp : 'OK!'});
-    })
-  .get(corsSetup, true ? ensureAuthenticated : auth.checkIfLoggedIn,
-       (req, res) => {
-         console.log(req.headers);
-         res.json({hi : 'there', user : req.user});
-       });
-
-function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) { return next(); }
-  // return res.status(401).send("You're not logged in");
-  return res.redirect('/?fwd=' + encodeURIComponent(req.originalUrl));
-}
 
 module.exports = clipRouter;
