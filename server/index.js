@@ -71,16 +71,16 @@ https.createServer(
        },
        app)
   .listen(config.get('ports').https, () => {
-    console.log(`HTTPS live at https://localhost:${config.get('ports').https}`);
+    console.log("HTTPS live at https://127.0.0.1:" + config.get('ports').https);
   });
 
 var insecureApp = express();
 insecureApp.get('*', (req, res) => {
-  res.redirect(
-    `${config.get('protocol')}://${config.get('url')}:${config.get('ports').https}`);
+  res.redirect(config.get('protocol') + "://" + config.get('url') + ":" +
+               config.get('ports').https);
 });
 http.createServer(insecureApp)
   .listen(config.get('ports').http, () => {
-    console.log(`HTTP live at http://localhost:${config.get('ports').http}`);
+    console.log("HTTP live at http://127.0.0.1:" + config.get('ports').http);
   });
 
