@@ -16,7 +16,7 @@ var corsSetup = cors({
 
 function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) { return next(); }
-  return res.redirect('/?fwd=' + encodeURIComponent(req.originalUrl));
+  return res.status(401).send("You're not logged in.");
 }
 
 function objToDb(obj) {
@@ -60,13 +60,16 @@ clipRouter.route('/')
   .get(corsSetup, ensureAuthenticated,
        (req, res) => {
          var obj = completeObj(req.query, req);
-         console.log('FROM', req.user, req.headers, 'SENT', obj);
+         console.log('Incoming', obj);
          objToDb(obj).then(results => { res.json(results); });
        })
   .post(corsSetup, ensureAuthenticated, (req, res) => {
     var obj = completeObj(req.body, req);
-    console.log('FROM', req.user, req.headers, 'SENT', obj);
-    objToDb(obj).then(results => { res.json(results); });
+    console.log('Incoming', obj);
+    objToDb(obj).then(results => {
+      console.log('Sending back', results);
+      res.json(results);
+    });
   });
 
 // curl -X POST https://localhost:4001/clip -d '{"hi":"THERE"}' -k -H
