@@ -28,7 +28,7 @@ app.use(bodyParser.json());
 app.use(morgan('combined'));
 app.use(cookieParser());
 app.use(session({
-     secret : 'zfnzkwjehgweghw',
+     secret : config.get('sessionSecret'),
      resave : false,
      saveUninitialized : true,
      store : new RDBStore({
@@ -77,11 +77,12 @@ https.createServer(
   });
 
 var insecureApp = express();
-insecureApp.get(
-    '*',
-    (req, res) => {res.redirect(
-        `${config.get('protocol')}://${config.get('url')}:${config.get('ports').https}`)});
+insecureApp.get('*', (req, res) => {
+  res.redirect(
+    `${config.get('protocol')}://${config.get('url')}:${config.get('ports').https}`);
+});
 http.createServer(insecureApp)
-    .listen(config.get('ports').http,
-            () => {console.log(`HTTP live at http://localhost:${config.get('ports').http}`)});
+  .listen(config.get('ports').http, () => {
+    console.log(`HTTP live at http://localhost:${config.get('ports').http}`);
+  });
 
