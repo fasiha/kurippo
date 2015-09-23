@@ -5,7 +5,6 @@ var fs = require('fs');
 var http = require('http');
 var https = require('https');
 var bodyParser = require('body-parser');
-var cors = require('cors');
 var morgan = require('morgan');
 var cookieParser = require('cookie-parser');
 
@@ -24,7 +23,6 @@ var clipRouter = require('./clipper');
 app.set('x-powered-by', false);
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-// app.use(cors()); // Apply in routers
 app.use(morgan('combined'));
 app.use(cookieParser());
 app.use(session({
@@ -58,7 +56,7 @@ app.use('/auth', authRouter)
   .get('/test', auth.checkIfLoggedIn,
        (req, res) => { res.json({hi : 'there', user : req.user}); })
   .use('/clip', clipRouter)
-  .use(express.static(__dirname + '/../client'))
+  .use('/static', express.static(__dirname + '/../static'))
   .use('*',
        function(req, res) { res.status(404).send('404 Not Found').end(); });
 
