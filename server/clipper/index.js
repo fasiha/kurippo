@@ -104,6 +104,7 @@ function render(id) {
 function updateRenderOnDisk() {
   return r.table('clippings')
     .orderBy({index : r.desc('date')})('html')
+    .coerceTo('array')
     .reduce((left, right) => left.add(right))
     .run(r.conn)
     .then(html =>
