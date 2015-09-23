@@ -6,3 +6,4 @@ certs/
 rethinkdb_data/
 config/default.js
 *.swp
+static/index.html
