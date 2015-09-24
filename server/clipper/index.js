@@ -24,6 +24,47 @@ function ensureAuthenticated(req, res, next) {
   return res.status(401).send("You're not logged in.");
 }
 
+function dateToString(date) {
+  return moment.tz(new Date(date), 'America/New_York')
+    .format('ddd YYYY MMM DD HH:mm:ss zz');
+}
+
+function render(id) {
+  return r.table('clippings')
+    .get(id)
+    .run(r.conn)
+    .then(obj => {
+      obj.date = dateToString(obj.date);
+      obj.clippings.forEach(o => o.date = dateToString(o.date));
+      return mustache('server/views/clipping.html', obj);
+    })
+    .then(html => {
+      // Write back to DB
+      return r.table('clippings').get(id).update({html : html}).run(r.conn);
+    })
+    .catch(function(err) { throw err; });
+}
+
+function updateRenderOnDisk() {
+  return r.table('clippings')
+    .orderBy({index : r.desc('date')})('html')
+    .coerceTo('array')
+    .reduce((left, right) => left.add(right))
+    .run(r.conn)
+    .then(html => mustache('server/views/all-clippings.html', {body : html}))
+    .then(html =>
+            fs.writeFileAsync(__dirname + '/../../static/index.html', html));
+}
+
+clipRouter.get('/rerenderAll', ensureAuthenticated, (req, res) => {
+  r.table('clippings')('id')
+    .coerceTo('array')
+    .run(r.conn)
+    .then(ids => Promise.all(ids.map(render)))  // FIXME makes O(n) db lookups
+    .then(tmp => updateRenderOnDisk())
+    .then(() => res.status(200).send('Done'));
+});
+
 function objToDb(obj) {
   return r.table('clippings')
     .getAll(obj.urlOrTitle, {index : 'urlOrTitle'})
@@ -67,37 +108,6 @@ function objToDb(obj) {
     });
 }
 
-function dateToString(date) {
-  return moment.tz(new Date(date), 'America/New_York')
-    .format('ddd YYYY MMM DD HH:mm:ss zz');
-}
-
-function render(id) {
-  return r.table('clippings')
-    .get(id)
-    .run(r.conn)
-    .then(obj => {
-      obj.date = dateToString(obj.date);
-      obj.clippings.forEach(o => o.date = dateToString(o.date));
-      return mustache('server/views/clipping.html', obj);
-    })
-    .then(html => {
-      // Write back to DB
-      return r.table('clippings').get(id).update({html : html}).run(r.conn);
-    })
-    .catch(function(err) { throw err; });
-}
-
-function updateRenderOnDisk() {
-  return r.table('clippings')
-    .orderBy({index : r.desc('date')})('html')
-    .coerceTo('array')
-    .reduce((left, right) => left.add(right))
-    .run(r.conn)
-    .then(html =>
-            fs.writeFileAsync(__dirname + '/../../static/index.html', html));
-}
-
 function completeObj(obj, req) {
   obj.date = new Date();
   obj.isQuote = _.isBoolean(obj.isQuote) ? obj.isQuote : obj.isQuote === 'true';
@@ -105,15 +115,6 @@ function completeObj(obj, req) {
   obj.user = req.user;
   return obj;
 }
-
-clipRouter.get('/rerenderAll', ensureAuthenticated, (req, res) => {
-  r.table('clippings')('id')
-    .coerceTo('array')
-    .run(r.conn)
-    .then(ids => Promise.all(ids.map(render)))  // FIXME makes O(n) db lookups
-    .then(tmp => updateRenderOnDisk())
-    .then(() => res.status(200).send('Done'));
-});
 
 clipRouter.route('/')
   .options(corsSetup)

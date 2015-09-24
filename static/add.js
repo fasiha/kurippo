@@ -1,34 +1,55 @@
 "use strict";
-for (var n of document.getElementsByTagName('button')) {
-  n.addEventListener('click', e => {
-    var f = document.createElement('form');
-    f.method = 'post';
-    f.action = '/clip';
-    var obj = {
-      url : n.attributes.kurl.value,
-      title : n.attributes.ktitle.value,
-      source : "web submission",
-      // Omit this: get it from DOM // selection : "",
-      isQuote : false
-    };
-    for (var k in obj) {
-      var i = document.createElement('input');
-      i.setAttribute('name', k);
-      i.setAttribute('value', obj[k]);
-      i.setAttribute('type', 'hidden');
-      f.appendChild(i);
-    }
-    var text = document.createElement('textarea');
-    text.setAttribute('name', 'selection');
-    text.setAttribute('placeholder', 'Add your comment…');
-    f.appendChild(text);
 
-    var submit = document.createElement('input');
-    submit.setAttribute('type', 'submit');
-    submit.setAttribute('value', 'Submit');
-    f.appendChild(submit);
-
-    e.target.parentNode.appendChild(f);
-
+function sendify(obj, callback) {
+  var req = new XMLHttpRequest();
+  req.onreadystatechange = (() => {
+    console.log(req.readyState || 'no readyState', req.status || 'no status',
+                req.responseText || 'no responseText');
+    if (callback && req.readyState === 4) { callback(); }
   });
+  req.open('POST', '/clip', true);
+  req.setRequestHeader('Content-Type', 'application/json');
+  req.withCredentials = true;
+  req.send(JSON.stringify(obj));
+}
+
+
+
+function addCommentButtonHandler(e) {
+  var section = e.target.parentNode;
+
+  var div = document.createElement('div');
+  div.id = 'div-' + section.id;
+  section.appendChild(div);
+
+  var textarea = document.createElement('textarea');
+  textarea.id = 'textarea-' + section.id;
+  div.appendChild(textarea);
+
+  var button = document.createElement('button');
+  button.textContent = "Submit";
+  button.id = 'button-' + section.id;
+  button.addEventListener('click', doneAddingButtonHandler);
+  div.appendChild(button);
+}
+
+function doneAddingButtonHandler(ee) {
+  var button = ee.target;
+  var div = button.parentNode;
+  var section = div.parentNode;
+
+  var obj = {
+    source : "web submission",
+    url : section.attributes.kUrl.value,
+    title : section.attributes.kTitle.value,
+    selection : document.getElementById('textarea-' + section.id).value,
+    isQuote : false
+  };
+
+  console.log(obj);
+  sendify(obj, () => { window.setTimeout(() => location.reload(), 1000); });
+}
+
+for (var n of document.getElementsByTagName('button')) {
+  n.addEventListener('click', addCommentButtonHandler);
 }
