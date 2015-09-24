@@ -1,11 +1,12 @@
 <section id="{{id}}" kUrl="{{url}}" kTitle="{{title}}">
   <h2><a href="{{{url}}}">{{title}}</a></h2>
-  —{{date}} <button>+</button>
+  <span class="infobar">
+    <span class="date">{{date}}</span>
+    <button>+</button>
+  </span>
   {{#clippings}}
   {{#selection}}
-  <div class="clipping{{#isQuote}} quote{{/isQuote}}">
-    {{#isQuote}}«» {{/isQuote}}{{selection}} —{{date}}
-  </div>
+  <div class="clipping{{#isQuote}} quote{{/isQuote}}">{{selection}}<span class="date">{{date}}</span></div>
   {{/selection}}
   {{/clippings}}
 </section>
