@@ -3,7 +3,7 @@
   —{{date}} <button>+</button>
   {{#clippings}}
   {{#selection}}
-  <div class="clipping" {{#isQuote}}class="quote"{{/isQuote}}>
+  <div class="clipping{{#isQuote}} quote{{/isQuote}}">
     {{#isQuote}}«» {{/isQuote}}{{selection}} —{{date}}
   </div>
   {{/selection}}
