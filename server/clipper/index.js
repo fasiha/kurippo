@@ -7,6 +7,7 @@ var r = require('../db');
 var auth = require('../auth');
 var _ = require('lodash');
 var mustache = require('consolidate').mustache;
+var moment = require('moment-timezone')
 var Promise = require('bluebird')
 var fs = require('fs');
 Promise.promisifyAll(fs);
@@ -65,35 +66,21 @@ function objToDb(obj) {
         });
     });
 }
-/*
-Return value for existing pages is:
 
-{ changes: [ { new_val: [Object], old_val: [Object] } ],
-  deleted: 0,
-  errors: 0,
-  inserted: 0,
-  replaced: 1,
-  skipped: 0,
-  unchanged: 0 }
+function dateToString(date) {
+  return moment.tz(new Date(date), 'America/New_York')
+    .format('ddd YYYY MMM DD HH:mm:ss zz');
+}
 
-For NEW pages is:
-
-{ deleted: 0,
-  errors: 0,
-  generated_keys: [ 'f454837c-e64a-4c01-85ee-830be46b43cb' ],
-  inserted: 1,
-  replaced: 0,
-  skipped: 0,
-  unchanged: 0 }
-*/
-
-// r.db('passport_rethinkdb_tutorial').table('clippings').update(o=>{return {url: o('clippings').nth(0)('url')}})
-// r.db('passport_rethinkdb_tutorial').table('clippings').update(o=>{return {title: o('clippings').nth(0)('title')}})
 function render(id) {
   return r.table('clippings')
     .get(id)
     .run(r.conn)
-    .then(obj => mustache('server/views/clipping.html', obj))
+    .then(obj => {
+      obj.date = dateToString(obj.date);
+      obj.clippings.forEach(o => o.date = dateToString(o.date));
+      return mustache('server/views/clipping.html', obj);
+    })
     .then(html => {
       // Write back to DB
       return r.table('clippings').get(id).update({html : html}).run(r.conn);
@@ -123,7 +110,7 @@ clipRouter.get('/rerenderAll', ensureAuthenticated, (req, res) => {
   r.table('clippings')('id')
     .coerceTo('array')
     .run(r.conn)
-    .then(ids => Promise.all(ids.map(render)))
+    .then(ids => Promise.all(ids.map(render)))  // FIXME makes O(n) db lookups
     .then(tmp => updateRenderOnDisk())
     .then(() => res.status(200).send('Done'));
 });
