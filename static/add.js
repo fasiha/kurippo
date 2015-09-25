@@ -80,5 +80,5 @@ if (dangerous) {
 }
 for (var n of buttonsToHandle) {
   n.addEventListener('click', buttonHandler);
-  if (dangerous) { n.className = n.className.replace("hidden", ""); }
+  if (dangerous) { n.className = n.className.replace("hidden", "").trim(); }
 }
