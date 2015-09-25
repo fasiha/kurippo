@@ -12,6 +12,14 @@ var Promise = require('bluebird')
 var fs = require('fs');
 Promise.promisifyAll(fs);
 
+// See http://www.restapitutorial.com/lessons/httpmethods.html for advice on
+// verbs and HTTP return codes. Also see
+// http://rethinkdb.com/api/javascript/delete/ for delete()'s reply.
+
+// Middleware to allow POST/PUT/DELETE/GET requests to reuse cookie
+// authentication (see `XMLHttpRequest.withCredentials`).  Thanks to
+// http://mortoray.com/2014/04/09/allowing-unlimited-access-with-cors/ for hints
+// on what headers to allow. Thankfully cors module does all the hard work.
 var corsSetup = cors({
   origin : true,
   allowedHeaders : [ 'Content-Type', 'Authorization', 'Cache-Control' ],
@@ -19,11 +27,14 @@ var corsSetup = cors({
   maxAge : 1
 });
 
+// Middleware requiring route to be logged in.
 function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) { return next(); }
-  return res.status(401).send("You're not logged in.");
+  return res.status(401).send("Not logged in.");
 }
 
+// Render an individual document (top-level clipping), full list of
+// documents, and helpers
 function dateToString(date) {
   return moment.tz(new Date(date), 'America/New_York')
     .format('ddd YYYY MMM DD HH:mm:ss zz');
@@ -56,15 +67,19 @@ function updateRenderOnDisk() {
             fs.writeFileAsync(__dirname + '/../../static/index.html', html));
 }
 
+// Route asking us to re-render everything. Useful when I change the template,
+// e.g.
 clipRouter.get('/rerenderAll', ensureAuthenticated, (req, res) => {
   r.table('clippings')('id')
     .coerceTo('array')
     .run(r.conn)
     .then(ids => Promise.all(ids.map(render)))  // FIXME makes O(n) db lookups
     .then(tmp => updateRenderOnDisk())
-    .then(() => res.status(200).send('Done'));
+    .then(() => res.status(200).send('Done'))
+    .catch(err => res.status(400).send('Unknown error'));
 });
 
+// Helper functions to prep a POSTed object to be enrolled in the db
 function objToDb(obj) {
   return r.table('clippings')
     .getAll(obj.urlOrTitle, {index : 'urlOrTitle'})
@@ -116,16 +131,58 @@ function completeObj(obj, req) {
   return obj;
 }
 
-clipRouter.route('/')
-  .options(corsSetup)
-  .post(corsSetup, ensureAuthenticated, (req, res) => {
+// Route to post new content. Follows
+// http://www.restapitutorial.com/lessons/httpmethods.html for advice on verbs
+// and HTTP return codes. Also see http://rethinkdb.com/api/javascript/delete/
+// for delete()'s reply.
+clipRouter.route('/').options(corsSetup).post(
+  corsSetup, ensureAuthenticated, (req, res) => {
     var obj = completeObj(req.body, req);
     console.log('Incoming', obj);
-    objToDb(obj).then(id => {
-      res.status(200).send('OK');
-      render(id).then(p => updateRenderOnDisk());
-    });
+    objToDb(obj)
+      .then(id => {
+        // Send reply before bothering to update the disk, since client probably
+        // isn't waiting to refresh.
+        res.status(200).send('OK');
+        render(id).then(p => updateRenderOnDisk());
+      })
+      .catch(err => res.status(400).send('Unknown error'));
   });
+
+// Route to delete an entire document.
+clipRouter.route('/:id').options(corsSetup).delete(
+  corsSetup, ensureAuthenticated,
+  (req, res) => r.table('clippings')
+                  .get(req.params.id)
+                  .delete()
+                  .run(r.conn)
+                  .then(dbreply => dbreply.deleted > 0
+                                     ? updateRenderOnDisk().then(
+                                         () => res.status(200).send('Deleted'))
+                                     : res.status(404).send('Not found'))
+                  .catch(err => res.status(400).send('Unknown error')));
+
+// Route to delete an individual sub-clipping (sub-document).  `deleteAt`
+// returns the array without the element in question. But if it can't find that
+// element (out-of-bounds), `update().errors` will be >0. Or, if it can't find
+// the document `id`, `update().errors` will be 0 but `.skipped` will be 1. If
+// all went well, `update().replaced` will be >0.
+clipRouter.route('/:id/:clipNum')
+  .options(corsSetup)
+  .delete(
+    corsSetup, ensureAuthenticated,
+    (req, res) =>
+      r.table('clippings')
+        .get(req.params.id)('clippings')
+        .update({clippings : r.row('clippings').deleteAt(+req.params.clipNum)})
+        .run(r.conn)
+        .then(dbreply =>
+                dbreply.replaced > 0
+                  ? updateRenderOnDisk().then(() => res.status(200).send('OK'))
+                  : res.status(404).send(dbreply.errors > 0
+                                           ? 'Subdocument not found'
+                                           : 'Document not found'))
+        .catch(err => res.status(400).send('Unknown error')));
 
 // curl -X POST https://localhost:4001/clip -d '{"hi":"THERE"}' -k -H
 // "Content-Type: application/json"
