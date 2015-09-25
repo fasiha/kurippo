@@ -2,11 +2,13 @@
   <h2><a href="{{{url}}}">{{title}}</a></h2>
   <span class="infobar">
     <span class="date">{{date}}</span>
-    <button>+</button>
+    <button class="add-button">+</button>
+    <button class="delete-button hidden">☠</button>
   </span>
   {{#clippings}}
   {{#selection}}
-  <div class="clipping{{#isQuote}} quote{{/isQuote}}">{{selection}}<span class="date">{{date}}</span></div>
+  <div class="clipping{{#isQuote}} quote{{/isQuote}}">{{selection}}<span
+      class="date">{{date}}</span> <button class="sub-delete-button hidden" knum="{{num}}">☠</button></div>
   {{/selection}}
   {{/clippings}}
 </section>

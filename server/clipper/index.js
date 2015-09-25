@@ -46,7 +46,10 @@ function render(id) {
     .run(r.conn)
     .then(obj => {
       obj.date = dateToString(obj.date);
-      obj.clippings.forEach(o => o.date = dateToString(o.date));
+      obj.clippings.forEach((o, i) => {
+        o.date = dateToString(o.date);
+        o.num = i;
+      });
       return mustache('server/views/clipping.html', obj);
     })
     .then(html => {
@@ -76,7 +79,10 @@ clipRouter.get('/rerenderAll', ensureAuthenticated, (req, res) => {
     .then(ids => Promise.all(ids.map(render)))  // FIXME makes O(n) db lookups
     .then(tmp => updateRenderOnDisk())
     .then(() => res.status(200).send('Done'))
-    .catch(err => res.status(400).send('Unknown error'));
+    .catch(err => {
+      res.status(400).send('Unknown error');
+      console.error(err);
+    });
 });
 
 // Helper functions to prep a POSTed object to be enrolled in the db
@@ -146,7 +152,10 @@ clipRouter.route('/').options(corsSetup).post(
         res.status(200).send('OK');
         render(id).then(p => updateRenderOnDisk());
       })
-      .catch(err => res.status(400).send('Unknown error'));
+      .catch(err => {
+        res.status(400).send('Unknown error');
+        console.error(err);
+      });
   });
 
 // Route to delete an entire document.
@@ -160,7 +169,10 @@ clipRouter.route('/:id').options(corsSetup).delete(
                                      ? updateRenderOnDisk().then(
                                          () => res.status(200).send('Deleted'))
                                      : res.status(404).send('Not found'))
-                  .catch(err => res.status(400).send('Unknown error')));
+                  .catch(err => {
+                    res.status(400).send('Unknown error');
+                    console.error(err);
+                  }));
 
 // Route to delete an individual sub-clipping (sub-document).  `deleteAt`
 // returns the array without the element in question. But if it can't find that
@@ -173,16 +185,20 @@ clipRouter.route('/:id/:clipNum')
     corsSetup, ensureAuthenticated,
     (req, res) =>
       r.table('clippings')
-        .get(req.params.id)('clippings')
+        .get(req.params.id)
         .update({clippings : r.row('clippings').deleteAt(+req.params.clipNum)})
         .run(r.conn)
-        .then(dbreply =>
-                dbreply.replaced > 0
-                  ? updateRenderOnDisk().then(() => res.status(200).send('OK'))
-                  : res.status(404).send(dbreply.errors > 0
-                                           ? 'Subdocument not found'
-                                           : 'Document not found'))
-        .catch(err => res.status(400).send('Unknown error')));
+        .then(dbreply => dbreply.replaced > 0
+                           ? render(req.params.id)
+                               .then(updateRenderOnDisk)
+                               .then(() => res.status(200).send('OK'))
+                           : res.status(404).send(dbreply.errors > 0
+                                                    ? 'Subdocument not found'
+                                                    : 'Document not found'))
+        .catch(err => {
+          res.status(400).send('Unknown error');
+          console.error(err);
+        }));
 
 // curl -X POST https://localhost:4001/clip -d '{"hi":"THERE"}' -k -H
 // "Content-Type: application/json"
