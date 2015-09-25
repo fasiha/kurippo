@@ -16,7 +16,7 @@ function sendify(obj, callback) {
 
 
 function addCommentButtonHandler(e) {
-  var section = e.target.parentNode;
+  var section = e.target.parentNode.parentNode; // FIXME
 
   var div = document.createElement('div');
   div.id = 'div-' + section.id;
@@ -40,8 +40,8 @@ function doneAddingButtonHandler(ee) {
 
   var obj = {
     source : "web submission",
-    url : section.attributes.kUrl.value,
-    title : section.attributes.kTitle.value,
+    url : section.attributes.kurl.value,
+    title : section.attributes.ktitle.value,
     selection : document.getElementById('textarea-' + section.id).value,
     isQuote : false
   };
