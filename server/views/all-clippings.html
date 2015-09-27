@@ -2,6 +2,7 @@
 <style>
 .clipping {
   margin-top: 1em;
+  margin-left: 0.5em;
   white-space: pre-wrap;
 }
 .quote {
@@ -9,8 +10,11 @@
   padding-left: 0.5em;
   margin-left: 1.5em;
 }
-.button-bar{
-  display: block;
+.button-bar::before{
+  content: "（";
+}
+.button-bar::after{
+  content: "）";
 }
 .infobar {
   margin-top: 0.5em;
