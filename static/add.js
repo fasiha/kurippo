@@ -38,7 +38,7 @@ function buttonHandler(e) {
       hasClass(className, 'intermission-add-button');  // if false, it's final!
 
     var targetButton = e.target;
-    var parentNode = targetButton.parentNode;
+    var parentNode = targetButton.parentNode.parentNode; // first is button-bar
     var section = parentNode.parentNode;
     var numId = (intermediate ? parentNode.attributes.knum.value : 'final') +
                 '-' + section.id;
