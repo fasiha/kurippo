@@ -20,31 +20,34 @@ function postComment(obj, callback) { restAPI('POST', '/clip', obj, callback); }
 function hasClass(str, substr) { return str.split(' ').indexOf(substr) >= 0; }
 function buttonHandler(e) {
   var className = e.target.className;
-  if (hasClass(className,'add-button')) {
-    addCommentButtonHandler(e);
 
-  } else if (hasClass(className, 'delete-button')) {
+  if (hasClass(className, 'delete-button')) {
     var div = e.target.parentNode;
     var section = div.parentNode;
     restAPI('DELETE', `/clip/${section.id}`, '', refreshCallback);
 
-  } else if (hasClass(className ,'sub-delete-button')) {
+  } else if (hasClass(className, 'sub-delete-button')) {
     var div = e.target.parentNode;
     var section = div.parentNode;
     var num = div.attributes.knum.value;
     restAPI('DELETE', `/clip/${section.id}/${num}`, '', refreshCallback);
 
-  } else if (hasClass(className, 'intermission-add-button')) {
+  } else if (hasClass(className, 'intermission-add-button') ||
+             hasClass(className, 'final-add-button')) {
+    var intermediate =
+      hasClass(className, 'intermission-add-button');  // if false, it's final!
+
     var targetButton = e.target;
-    var parentDiv = targetButton.parentNode;
-    var section = parentDiv.parentNode;
-    var numId = parentDiv.attributes.knum.value + '-' + section.id;
+    var parentNode = targetButton.parentNode;
+    var section = parentNode.parentNode;
+    var numId = (intermediate ? parentNode.attributes.knum.value : 'final') +
+                '-' + section.id;
     // byebye button
     targetButton.remove();
 
     var div = document.createElement('div');
     div.id = 'div-' + numId;
-    parentDiv.insertBefore(div, parentDiv.firstChild);
+    parentNode.insertBefore(div, parentNode.firstChild);
 
     var textarea = document.createElement('textarea');
     textarea.id = 'textarea-' + numId;
@@ -53,7 +56,9 @@ function buttonHandler(e) {
     var button = document.createElement('button');
     button.textContent = "Submit";
     button.id = 'button-' + numId;
-    button.addEventListener('click', intermissionDoneAddingButtonHandler);
+    button.addEventListener('click', intermediate
+                                       ? intermissionDoneAddingButtonHandler
+                                       : finalDoneAddingButtonHandler);
     div.appendChild(button);
   }
 }
@@ -77,35 +82,16 @@ function intermissionDoneAddingButtonHandler(ee) {
   console.log(obj, url);
   restAPI('put', url, obj, refreshCallback);
 }
-
-function addCommentButtonHandler(e) {
-  var section = e.target.parentNode.parentNode;  // FIXME
-
-  var div = document.createElement('div');
-  div.id = 'div-' + section.id;
-  section.appendChild(div);
-
-  var textarea = document.createElement('textarea');
-  textarea.id = 'textarea-' + section.id;
-  div.appendChild(textarea);
-
-  var button = document.createElement('button');
-  button.textContent = "Submit";
-  button.id = 'button-' + section.id;
-  button.addEventListener('click', doneAddingButtonHandler);
-  div.appendChild(button);
-}
-
-function doneAddingButtonHandler(ee) {
+function finalDoneAddingButtonHandler(ee) {
   var button = ee.target;
-  var div = button.parentNode;
-  var section = div.parentNode;
+  var parentNode = button.parentNode.parentNode;
+  var section = parentNode.parentNode;
 
   var obj = {
     source : "web submission",
     url : section.attributes.kurl.value,
     title : section.attributes.ktitle.value,
-    selection : document.getElementById('textarea-' + section.id).value,
+    selection : document.getElementById('textarea-final-' + section.id).value,
     isQuote : false
   };
 
