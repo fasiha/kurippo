@@ -49,7 +49,7 @@ function render(id) {
       obj.clippings.forEach((o, i) => {
         o.date = dateToString(o.date);
         o.num = i;
-        o.selection = o.selection.replace(/\n *\n *(\n )*/g, '\n\n');
+        o.selection = o.selection.replace(/\n *\n *(\n *)*/g, '\n\n');
       });
       return mustache('server/views/clipping.html', obj);
     })
