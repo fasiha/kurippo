@@ -179,26 +179,45 @@ clipRouter.route('/:id').options(corsSetup).delete(
 // element (out-of-bounds), `update().errors` will be >0. Or, if it can't find
 // the document `id`, `update().errors` will be 0 but `.skipped` will be 1. If
 // all went well, `update().replaced` will be >0.
+function deleteOrInsertSubClipping(req, res, method) {
+  var updated;
+  if (method === 'delete') {
+    updated = {clippings : r.row('clippings').deleteAt(+req.params.clipNum)};
+  } else if (method === 'put') {
+    var obj = completeObj(req.body, req);
+    updated = {
+      clippings : r.row('clippings').insertAt(+req.params.clipNum, obj),
+      date : obj.date
+    };
+  } else {
+    console.error(
+      'deleteOrInsertSubClipping only understands `delete` or `put`, not ' +
+      method);
+    res.status(400).send('Internal error');
+  }
+
+  return r.table('clippings')
+    .get(req.params.id)
+    .update(updated)
+    .run(r.conn)
+    .then(dbreply => dbreply.replaced > 0
+                       ? render(req.params.id)
+                           .then(updateRenderOnDisk)
+                           .then(() => res.status(200).send('OK'))
+                       : res.status(404).send(dbreply.errors > 0
+                                                ? 'Subdocument not found'
+                                                : 'Document not found'))
+    .catch(err => {
+      res.status(400).send('Unknown error');
+      console.error(err);
+    });
+}
 clipRouter.route('/:id/:clipNum')
   .options(corsSetup)
-  .delete(
-    corsSetup, ensureAuthenticated,
-    (req, res) =>
-      r.table('clippings')
-        .get(req.params.id)
-        .update({clippings : r.row('clippings').deleteAt(+req.params.clipNum)})
-        .run(r.conn)
-        .then(dbreply => dbreply.replaced > 0
-                           ? render(req.params.id)
-                               .then(updateRenderOnDisk)
-                               .then(() => res.status(200).send('OK'))
-                           : res.status(404).send(dbreply.errors > 0
-                                                    ? 'Subdocument not found'
-                                                    : 'Document not found'))
-        .catch(err => {
-          res.status(400).send('Unknown error');
-          console.error(err);
-        }));
+  .delete(corsSetup, ensureAuthenticated,
+          (req, res) => deleteOrInsertSubClipping(req, res, 'delete'))
+  .put(corsSetup, ensureAuthenticated,
+       (req, res) => deleteOrInsertSubClipping(req, res, 'put'));
 
 // curl -X POST https://localhost:4001/clip -d '{"hi":"THERE"}' -k -H
 // "Content-Type: application/json"
