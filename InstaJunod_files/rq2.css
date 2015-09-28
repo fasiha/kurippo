@@ -1,0 +1,28 @@
+div.editbox {
+border: 3px solid rgb(186, 251, 128);
+padding: 1px;
+-moz-border-radius: 15px 15px 15px 15px;
+}
+div.editbox:hover {
+padding: 1px;
+border: 3px solid #fff;
+color:      rgb( 80, 80, 80) ;
+background: rgb( 240, 240, 240) ;
+}
+
+
+input.buttonmain, input.buttonedit, input.buttonbump {
+color: #000;
+background-color:#fff;
+border: 1px solid rgb(128,128,128);
+margin-bottom: -10px;
+margin-top: 5px;
+}
+
+input.buttonmainhover {
+color: #aaa;
+background-color:#777;
+border: 1px solid rgb(255,255,255);
+}
+
+
