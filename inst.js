@@ -9,4 +9,5 @@ v.forEach((o, i) => {
     p.date = dodate(p.date);
   });
 });
-
+fs.writeFileSync('clean-instaldebrn.json','');
+v.forEach(o=>fs.appendFileSync('clean-instaldebrn.json', JSON.stringify(o)+'\n'));
