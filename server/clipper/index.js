@@ -6,6 +6,7 @@ var clipRouter = express.Router();
 var r = require('../db');
 var auth = require('../auth');
 var _ = require('lodash');
+var url = require('url');
 var mustache = require('consolidate').mustache;
 var moment = require('moment-timezone')
 var Promise = require('bluebird')
@@ -127,7 +128,8 @@ function objToDb(obj) {
 function completeObj(obj, req) {
   obj.date = new Date();
   obj.isQuote = _.isBoolean(obj.isQuote) ? obj.isQuote : obj.isQuote === 'true';
-  obj.urlOrTitle = obj.url || obj.title || "（ｕｎｔｉｔｌｅｄ）";
+  var urlNoHash = obj.url ? _.omit(url.parse(obj.url),'hash').format() : '';
+  obj.urlOrTitle = urlNoHash || obj.title || "（ｕｎｔｉｔｌｅｄ）";
   obj.user = req.user;
   return obj;
 }

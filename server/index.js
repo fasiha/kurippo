@@ -54,7 +54,7 @@ app.set('views', __dirname + '/views')
 app.use('/auth', authRouter)
   .get('/', function(req, res) { res.render('index.html', {user : req.user}); })
   .get('/test', auth.ensureAuthenticated,
-       (req, res) => { res.json({hi : 'there', user : req.user}); })
+       (req, res) => res.json({hi : 'there', user : req.user}))
   .use('/clip', clipRouter)
   .use('/static', express.static(__dirname + '/../static'))
   .use('/private', auth.ensureAuthenticated,
