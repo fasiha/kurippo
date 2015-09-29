@@ -27,12 +27,6 @@ var corsSetup = cors({
   maxAge : 1
 });
 
-// Middleware requiring route to be logged in.
-function ensureAuthenticated(req, res, next) {
-  if (req.isAuthenticated()) { return next(); }
-  return res.status(401).send("Not logged in.");
-}
-
 // Render an individual document (top-level clipping), full list of
 // documents, and helpers
 function dateToString(date) {
@@ -73,7 +67,7 @@ function updateRenderOnDisk() {
 
 // Route asking us to re-render everything. Useful when I change the template,
 // e.g.
-clipRouter.get('/rerenderAll', ensureAuthenticated, (req, res) => {
+clipRouter.get('/rerenderAll', auth.ensureAuthenticated, (req, res) => {
   r.table('clippings')('id')
     .coerceTo('array')
     .run(r.conn)
@@ -143,7 +137,7 @@ function completeObj(obj, req) {
 // and HTTP return codes. Also see http://rethinkdb.com/api/javascript/delete/
 // for delete()'s reply.
 clipRouter.route('/').options(corsSetup).post(
-  corsSetup, ensureAuthenticated, (req, res) => {
+  corsSetup, auth.ensureAuthenticated, (req, res) => {
     var obj = completeObj(req.body, req);
     console.log('Incoming', obj);
     objToDb(obj)
@@ -161,7 +155,7 @@ clipRouter.route('/').options(corsSetup).post(
 
 // Route to delete an entire document.
 clipRouter.route('/:id').options(corsSetup).delete(
-  corsSetup, ensureAuthenticated,
+  corsSetup, auth.ensureAuthenticated,
   (req, res) => r.table('clippings')
                   .get(req.params.id)
                   .delete()
@@ -215,9 +209,9 @@ function deleteOrInsertSubClipping(req, res, method) {
 }
 clipRouter.route('/:id/:clipNum')
   .options(corsSetup)
-  .delete(corsSetup, ensureAuthenticated,
+  .delete(corsSetup, auth.ensureAuthenticated,
           (req, res) => deleteOrInsertSubClipping(req, res, 'delete'))
-  .put(corsSetup, ensureAuthenticated,
+  .put(corsSetup, auth.ensureAuthenticated,
        (req, res) => deleteOrInsertSubClipping(req, res, 'put'));
 
 // curl -X POST https://localhost:4001/clip -d '{"hi":"THERE"}' -k -H

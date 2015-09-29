@@ -53,10 +53,12 @@ app.set('views', __dirname + '/views')
 // Routes
 app.use('/auth', authRouter)
   .get('/', function(req, res) { res.render('index.html', {user : req.user}); })
-  .get('/test', auth.checkIfLoggedIn,
+  .get('/test', auth.ensureAuthenticated,
        (req, res) => { res.json({hi : 'there', user : req.user}); })
   .use('/clip', clipRouter)
   .use('/static', express.static(__dirname + '/../static'))
+  .use('/private', auth.ensureAuthenticated,
+       express.static(__dirname + '/../private'))
   .use('*',
        function(req, res) { res.status(404).send('404 Not Found').end(); });
 

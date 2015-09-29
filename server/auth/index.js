@@ -1,6 +1,7 @@
 /*jshint node:true */
 'use strict';
 
+var _ = require('lodash');
 var config = require('config');
 var passport = require('passport');
 var GitHubStrategy = require('passport-github').Strategy;
@@ -90,11 +91,13 @@ passport.use(new TwitterStrategy({
   }, 'twitter')
 ));
 
-passport.checkIfLoggedIn = function (req, res, next) {
-  if (req.user) {
+passport.ensureAuthenticated = function(req, res, next) {
+  if (req.isAuthenticated() &&
+      _.all(
+        _.map(config.authorizedUser, (val, key) => req.user[key] === val))) {
     return next();
   }
-  return res.status(401).send('You\'re not logged in');
+  return res.status(401).send('Not authorized');
 };
 
 module.exports = passport;
