@@ -22,12 +22,11 @@ function buttonHandler(e) {
   var className = e.target.className;
 
   if (hasClass(className, 'delete-button')) {
-    var div = e.target.parentNode;
-    var section = div.parentNode;
+    var section = e.target.parentNode.parentNode.parentNode;
     restAPI('DELETE', `/clip/${section.id}`, '', refreshCallback);
 
   } else if (hasClass(className, 'sub-delete-button')) {
-    var div = e.target.parentNode;
+    var div = e.target.parentNode.parentNode;
     var section = div.parentNode;
     var num = div.attributes.knum.value;
     restAPI('DELETE', `/clip/${section.id}/${num}`, '', refreshCallback);
