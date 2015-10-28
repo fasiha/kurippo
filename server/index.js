@@ -7,6 +7,7 @@ var https = require('https');
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
 var cookieParser = require('cookie-parser');
+var compression = require('compression');
 
 var config = require('config');
 var express = require('express');
@@ -20,6 +21,7 @@ var authRouter = require('./auth/auth-router');
 var clipRouter = require('./clipper');
 
 // Middleware
+app.use(compression());
 app.set('x-powered-by', false);
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
