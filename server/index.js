@@ -28,6 +28,7 @@ app.use(bodyParser.json());
 app.use(morgan('combined'));
 app.use(cookieParser());
 app.use(session({
+     cookie: { maxAge : 1e3 * 3600 * 24 * 90 }, rolling : true,
      secret : config.get('sessionSecret'),
      resave : false,
      saveUninitialized : true,
