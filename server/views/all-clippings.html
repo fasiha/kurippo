@@ -14,9 +14,14 @@ textarea {
   margin-left: 1.5em;
   background-color: Snow;
 }
-div.clipping > p {
+.clipping > p {
   margin: 0;
+  white-space: normal;
   display: inline-block;
+}
+.clipping.not-quote > * {
+  white-space: normal;
+  margin: 0;
 }
 .button-bar::before{
   content: "（";
