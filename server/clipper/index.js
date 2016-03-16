@@ -1,5 +1,6 @@
 'use strict';
 
+var marked = require('marked');
 var express = require('express');
 var cors = require('cors');
 var clipRouter = express.Router();
@@ -45,6 +46,10 @@ function render(id) {
         o.date = dateToString(o.date);
         o.num = i;
         o.selection = o.selection.replace(/\n[ \t]*\n[ \t]*(\n[ \t]*)*/g, '\n\n');
+        if (o.isQuote) {
+          o.selection = marked(o.selection);
+          console.log('Markdowned!', o.selection);
+        }
       });
       return mustache('server/views/clipping.html', obj);
     })
