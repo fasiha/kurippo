@@ -46,7 +46,7 @@ function render(id) {
         o.date = dateToString(o.date);
         o.num = i;
         o.selection = o.selection.replace(/\n[ \t]*\n[ \t]*(\n[ \t]*)*/g, '\n\n');
-        if (o.isQuote) {
+        if (!o.isQuote) {
           o.selection = marked(o.selection);
           console.log('Markdowned!', o.selection);
         }
